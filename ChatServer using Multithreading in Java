@@ -2,30 +2,34 @@ import javax.swing.*;
 import java.awt.event.*;
 import java.io.*;
 import java.net.*;
-import java.awt.*;
-class ChatClient implements ActionListener
+import java.awt.Color;
+class ChatServer implements ActionListener
 {
 	JFrame fr;
 	JTextField t1;
 	JTextArea ta;
 	JLabel l1,l2;
 	JButton b1;
-	Socket s1;
-	DataOutputStream dout;
+	ServerSocket ss;
+	Socket s;
 	DataInputStream din;
+	DataOutputStream dout;
 	String name;
 	Color c;
-	ChatClient()
+	ChatServer()
 	{
 		try
 		{
-			fr=new JFrame("CLIENT");
-			name=JOptionPane.showInputDialog(fr,"Enter Your Name");
-			s1=new Socket("127.0.0.1",1500);
+			name=JOptionPane.showInputDialog(null,"Enter your Name");
+			ss=new ServerSocket(1500);
+			System.out.println("Server Started ");
 			System.out.println(name+" is Online");
+			s=ss.accept();
+			din=new DataInputStream(s.getInputStream());
+			dout=new DataOutputStream(s.getOutputStream());
+			fr=new JFrame("SERVER");
 			fr.setLayout(null);
 			fr.setSize(500,500);
-			fr.setLocation(500,500);
 			ta=new JTextArea();
 			ta.setBounds(10,50,450,300);
 			fr.add(ta);
@@ -43,39 +47,42 @@ class ChatClient implements ActionListener
 			l2=new JLabel(name+" is Online",JLabel.RIGHT);
 			l2.setBounds(200,20,100,30);
 			fr.add(l2);
-			b1.addActionListener(this);
-			dout=new DataOutputStream(s1.getOutputStream());
-			din=new DataInputStream(s1.getInputStream());
 			fr.setVisible(true);
-			new ChatClientThread(din);
+			b1.addActionListener(this);
+			new ChatServerThread(din);
+			
 		}
 		catch(Exception e)
 		{
 			e.printStackTrace();
 		}
+			
 	}
-			public void actionPerformed(ActionEvent e)
-			{
-				try
-				{
-					String msg=t1.getText();
-					msg=name + ":" + msg;
-					ta.setText(ta.getText()+"\n"+msg);
-					dout.writeUTF(msg);
-				}
-				catch(Exception ee)
-				{
-					ee.printStackTrace();
-				}
-			}
-			public static void main(String args[])
-			{
-				new ChatClient();
-			}
-		class ChatClientThread extends Thread
+	public void actionPerformed(ActionEvent e)
+	{
+		try
+		{
+			
+			String msg=t1.getText();
+			msg=name+" : "+msg;
+			dout.writeUTF(msg);
+			ta.setText(ta.getText()+"\n"+msg);
+			
+		}
+		catch(Exception ee)
+		{
+			ee.printStackTrace();
+		}
+	}
+	
+	public static void main(String args[])
+	{
+		new ChatServer();
+	}
+	class ChatServerThread extends Thread
 	{
 		DataInputStream din;
-		ChatClientThread(DataInputStream din)
+		ChatServerThread(DataInputStream din)
 		{
 			this.din=din;
 			start();
@@ -96,4 +103,4 @@ class ChatClient implements ActionListener
 			}
 		}
 	}
-}		
+}
